@@ -11,4 +11,4 @@ Dependencies: Flask, socketio and socketIO_client
 
 `pip install pip install socketIO-client`
 
-This implementation contains a hardcoded example where all weights some upto zero. To change that, weights need to be passed to algorithm from the main model.
+This implementation contains a hardcoded example where all weights sum upto zero. To change that, weights need to be passed to algorithm from the main model.
