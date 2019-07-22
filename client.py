@@ -4,6 +4,7 @@ import numpy as np
 from copy import deepcopy
 import codecs
 import pickle
+import json
 
 
 
@@ -22,28 +23,31 @@ class SecAggregator:
 		return self.pubkey
 	def generate_weights(self,seed):
 		np.random.seed(seed)
-		return np.random.rand(self.dim)
+		return np.float32(np.random.rand(self.dim[0],self.dim[1]))
 	def prepare_weights(self,shared_keys,myid):
 		self.keys = shared_keys
 		self.id = myid
 		wghts = deepcopy(self.weights)
 		for sid in shared_keys:
-			if shared_keys[sid]>myid:
-				wghts+=generate_weights((sid**self.secretkey)%self.mod)
-			elif shared_keys[sid]<myid:
-				wghts-=generate_weights((sid**self.secretkey)%self.mod)
-		wghts+=generate_weights(self.sndkey)
+			if sid>myid:
+				print "1",myid,sid,(shared_keys[sid]**self.secretkey)%self.mod
+				wghts+=self.generate_weights((shared_keys[sid]**self.secretkey)%self.mod)
+			elif sid<myid:
+				print "2",myid,sid,(shared_keys[sid]**self.secretkey)%self.mod
+				wghts-=self.generate_weights((shared_keys[sid]**self.secretkey)%self.mod)
+		wghts+=self.generate_weights(self.sndkey)
 		return wghts
 	def reveal(self, keylist):
 		wghts = np.zeros(self.dim)
 		for each in keylist:
+			print each
 			if each<self.id:
-				wghts-=generate_weights((self.keys[each]**self.secretkey)%self.mod)
+				wghts-=self.generate_weights((self.keys[each]**self.secretkey)%self.mod)
 			elif each>self.id:
-				wghts+=generate_weights((self.keys[each]**self.secretkey)%self.mod)
-		return wghts
+				wghts+=self.generate_weights((self.keys[each]**self.secretkey)%self.mod)
+		return -1*wghts
 	def private_secret(self):
-		return generate_weights(self.sndkey)
+		return self.generate_weights(self.sndkey)
 
 
 class secaggclient:
@@ -80,7 +84,8 @@ class secaggclient:
 		def on_sharedkeys(*args):
 			keydict = json.loads(args[0])
 			self.keys = keydict
-			weight = self.aggregator.prepare_weights(self.keys.self.id)
+			print("KEYS RECIEVED: ",self.keys)
+			weight = self.aggregator.prepare_weights(self.keys,self.id)
 			weight = self.weights_encoding(weight)
 			resp = {
 				'weights':weight
