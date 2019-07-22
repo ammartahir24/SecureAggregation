@@ -18,6 +18,11 @@ class secaggserver:
 		self.socketio = SocketIO(self.app)
 		self.register_handles()
 		self.numkeys = 0
+		self.responses = 0
+		self.secretresp = 0
+		self.othersecretresp = 0
+		self.respset = set()
+		self.resplist = []
 
 	def weights_encoding(self, x):
 		return codecs.encode(pickle.dumps(x), 'base64').decode()
@@ -39,8 +44,9 @@ class secaggserver:
 			print(request.sid,'sent key:',key['key'])
 			self.client_keys[request.sid] = key['key']
 			self.numkeys+=1
+			self.respset.add(request.sid)
 			print('keys: ', self.client_keys)
-			if(self.numkeys>=n):
+			if(self.numkeys==self.n):
 				print "Starting public key transfer"
 				ready_clients = list(self.ready_client_ids)
 				key_json = json.dumps(self.client_keys)
@@ -49,7 +55,37 @@ class secaggserver:
 
 		@self.socketio.on('weights')
 		def handle_weights(data):
-			self.aggregate+=self.weights_decoding(data)
+			if self.responses<self.k:
+				self.aggregate+=self.weights_decoding(data['weights'])
+				emit('send_secret',{
+					'msg':"Hey I'm server"
+					})
+				self.responses+=1
+				self.respset.remove(request.sid)
+				resplist.append(request.sid)
+			else:
+				emit('late',{
+					'msg':"Hey I'm server"
+					})
+				self.responses+=1
+			if self.responses==self.k:
+				absentkeyjson = json.dumps(list(self.respset))
+				for ids in resplist:
+					emit('send_there_secret',absentkeyjson,room=rid)
+
+		@self.socketio.on('secret')
+		def handle_secret(data):
+			self.aggregate+=self.weights_decoding(data['secret'])
+			self.secretresp+=1
+			if self.secretresp==self.k and self.othersecretresp==self.k:
+				return self.aggregate
+
+		@self.socketio.on('rvl_secret')
+		def handle_secret_reveal(data):
+			self.aggregate+=self.weights_decoding(data['secret'])
+			self.othersecretresp+=1
+			if self.secretresp==self.k and self.othersecretresp==self.k:
+				return self.aggregate			
 
 		@self.socketio.on('disconnect')
 		def handle_disconnect():
@@ -60,7 +96,7 @@ class secaggserver:
 
 		@self.socketio.on("wakeup")
 		def handle_wakeup():
-			print("Recieved wakeup")
+			print("Recieved wakeup from",request.sid)
 			emit("send_public_key",{
         		"message":"hey I'm server",
         		"id":request.sid
