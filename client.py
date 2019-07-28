@@ -21,6 +21,13 @@ class SecAggregator:
 		self.id = ''
 	def public_key(self):
 		return self.pubkey
+	def set_weights(self,wghts,dims):
+		self.weights = wghts
+		self.dim = dims
+	def configure(self,base,mod):
+		self.base = base
+		self.mod = mod
+		self.pubkey = (self.base**self.secretkey) % self.mod
 	def generate_weights(self,seed):
 		np.random.seed(seed)
 		return np.float32(np.random.rand(self.dim[0],self.dim[1]))
@@ -53,13 +60,21 @@ class SecAggregator:
 class secaggclient:
 	def __init__(self,serverhost,serverport):
 		self.sio = SocketIO(serverhost,serverport,LoggingNamespace)
-		self.aggregator = SecAggregator(2,100255,(10,10),np.zeros((10,10)))
+		self.aggregator = SecAggregator(3,100103,(10,10),np.float32(np.full((10,10),3,dtype=int)))
 		self.id = ''
 		self.keys = {}
+
+	def start(self):
 		self.register_handles()
-		print("init")
+		print("Starting")
 		self.sio.emit("wakeup")
 		self.sio.wait()
+
+	def configure(self,b,m):
+		self.aggregator.configure(b,m)
+
+	def set_weights(self,wghts,dims):
+		self.aggregator.set_weights(wghts,dims)
 
 	def weights_encoding(self, x):
 		return codecs.encode(pickle.dumps(x), 'base64').decode()
@@ -108,9 +123,8 @@ class secaggclient:
 
 
 		def on_disconnect(*args):
-			msg = args[0]
 			self.sio.emit("disconnect")
-			print("Disconnected",msg['message'])
+			print("Disconnected")
 		self.sio.on('connect', on_connect)
 		self.sio.on('disconnect', on_disconnect)
 		self.sio.on('send_public_key',on_send_pubkey)
@@ -120,5 +134,8 @@ class secaggclient:
 		self.sio.on('send_there_secret',on_reveal_secret)
 
 if __name__=="__main__":
-	secaggclient("127.0.0.1",2019)
+	s = secaggclient("127.0.0.1",2019)
+	s.set_weights(np.zeros((10,10)),(10,10))
+	s.configure(2,100255)
+	s.start()
 	print("Ready")

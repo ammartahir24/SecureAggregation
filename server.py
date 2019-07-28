@@ -89,7 +89,7 @@ class secaggserver:
 
 		@self.socketio.on('secret')
 		def handle_secret(data):
-			print request.sid,"sent SECRETTTT"
+			print request.sid,"sent SECRET"
 			self.aggregate+=self.weights_decoding(data['secret'])
 			self.secretresp+=1
 			if self.secretresp==self.k and self.othersecretresp==self.k:
@@ -98,7 +98,7 @@ class secaggserver:
 
 		@self.socketio.on('rvl_secret')
 		def handle_secret_reveal(data):
-			print request.sid,"sent SHAREDDDDD secrets"
+			print request.sid,"sent shared secrets"
 			self.aggregate+=self.weights_decoding(data['rvl_secret'])
 			self.othersecretresp+=1
 			if self.secretresp==self.k and self.othersecretresp==self.k:
