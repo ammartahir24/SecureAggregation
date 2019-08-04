@@ -12,30 +12,30 @@ Dependencies: Flask, socketio and socketIO_client
 `pip install socketIO-client`
 
 # Usage:
-client side:
-Init:
+## Client side:
+### Init:
 
 `c = secaggclient(host,port)`
 
-Give weights needed to be transmitted (originally set to zero)
+### Give weights needed to be transmitted (originally set to zero)
 
 `c.set_weights(nd_numpyarray,dimensions_of_array)`
 
-Set coomon base and mod
+### Set coomon base and mod
 
 `c.configure(common_base, common_mod)`
 
-start client side:
+### start client side:
 
 `c.start()`
 
-server side:
-init:
+## Server side:
+### init:
 
 `s = secaggserver(host,port,n,k)`
 
 where n is number of selected clients for the round and k is number of client responses required before aggregation process begins
 
-start server side:
+### start server side:
 
 `s.start()`
