@@ -21,7 +21,7 @@ Dependencies: Flask, socketio and socketIO_client
 
 `c.set_weights(nd_numpyarray,dimensions_of_array)`
 
-### Set coomon base and mod
+### Set common base and mod
 
 `c.configure(common_base, common_mod)`
 
