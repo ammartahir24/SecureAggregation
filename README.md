@@ -11,4 +11,6 @@ Dependencies: Flask, socketio and socketIO_client
 
 `pip install socketIO-client`
 
-This implementation contains a hardcoded example where all weights sum upto zero. To change that, weights need to be passed to algorithm from the main model.
+Usage:
+client side:
+`c = secaggclient(host,port)`
